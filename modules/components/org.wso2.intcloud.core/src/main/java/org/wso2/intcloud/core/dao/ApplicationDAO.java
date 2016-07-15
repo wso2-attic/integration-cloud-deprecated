@@ -22,6 +22,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.intcloud.common.IntCloudException;
 import org.wso2.intcloud.core.DBUtil;
 import org.wso2.intcloud.core.SQLQueryConstants;
+import org.wso2.intcloud.core.dto.Api;
 import org.wso2.intcloud.core.dto.Application;
 import org.wso2.intcloud.core.dto.ApplicationRuntime;
 import org.wso2.intcloud.core.dto.ApplicationType;
@@ -36,9 +37,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * DAO class for persisting or retrieving application related data to database.
@@ -107,6 +106,55 @@ public class ApplicationDAO {
             String msg =
                     "Error while generating stream of the icon for application : " + application.getApplicationName() +
                     " in tenant : " + tenantId;
+            log.error(msg, e);
+            throw new IntCloudException(msg, e);
+        } finally {
+            DBUtil.closeResultSet(resultSet);
+            DBUtil.closePreparedStatement(preparedStatement);
+        }
+
+    }
+
+
+    /**
+     * Method for adding API details to database.
+     *
+     * @param dbConnection database connection
+     * @param api api object
+     * @param applicationId application id
+     * @param tenantId tenant id
+     * @return
+     * @throws IntCloudException
+     */
+    public void addAPI(Connection dbConnection, int applicationId, Api api, int tenantId)
+            throws IntCloudException {
+
+
+        PreparedStatement preparedStatement = null;
+        int apiId;
+        ResultSet resultSet = null;
+
+        try {
+
+            preparedStatement = dbConnection.prepareStatement(SQLQueryConstants.ADD_API, Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setString(1, api.getName());
+            preparedStatement.setInt(2, applicationId);
+            preparedStatement.setString(3, api.getContext());
+            preparedStatement.setString(4, api.getHttpMethods());
+            preparedStatement.setString(5, api.getUrl());
+            preparedStatement.setInt(6, tenantId);
+
+            preparedStatement.execute();
+
+            resultSet = preparedStatement.getGeneratedKeys();
+            while (resultSet.next()){
+                apiId = resultSet.getInt(1);
+                api.setId(apiId);
+            }
+
+        } catch (SQLException e) {
+            String msg = "Error occurred while adding API to database for application id : " + applicationId +
+                         " API name : " + api.getName() + " in tenant : " + tenantId;
             log.error(msg, e);
             throw new IntCloudException(msg, e);
         } finally {
@@ -580,6 +628,7 @@ public class ApplicationDAO {
     public Application getApplicationByHashId(Connection dbConnection, String applicationHashId) throws IntCloudException {
 
         PreparedStatement preparedStatement = null;
+        int applicationId = 0;
         Application application = new Application();
         ResultSet resultSet = null;
 
@@ -600,9 +649,8 @@ public class ApplicationDAO {
                 application.setApplicationType(resultSet.getString(SQLQueryConstants.APPLICATION_TYPE_NAME));
                 application.setIcon(resultSet.getBlob(SQLQueryConstants.ICON));
                 application.setCarbonApplicationName(resultSet.getString(SQLQueryConstants.CARBON_APPLICATION_NAME));
-                application.setParamConfiguration(resultSet.getString(SQLQueryConstants.PARAM_CONFIGURATION));
-                application.setTaskConfiguration(resultSet.getString(SQLQueryConstants.TASK_CONFIGURATION));
                 application.setVersions(getAllVersionsOfApplication(dbConnection, applicationHashId));
+                applicationId = resultSet.getInt(SQLQueryConstants.ID);
 
             }
 
@@ -615,7 +663,53 @@ public class ApplicationDAO {
             DBUtil.closeResultSet(resultSet);
             DBUtil.closePreparedStatement(preparedStatement);
         }
+
+        List<Api> apiList = getAllApisOfApplication(dbConnection, applicationId);
+        application.setApiList(apiList);
+
         return application;
+    }
+
+    /**
+     * Method for retrieving all the APIs of a specific application.
+     *
+     * @param dbConnection
+     * @param applicationId
+     * @return
+     * @throws IntCloudException
+     */
+    public List<Api> getAllApisOfApplication(Connection dbConnection, int applicationId)
+            throws IntCloudException {
+
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        List<Api> apis = new ArrayList<>();
+        try {
+
+            preparedStatement = dbConnection.prepareStatement(SQLQueryConstants.GET_APIS_OF_APPLICATION);
+            preparedStatement.setInt(1, applicationId);
+
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()){
+
+                Api api = new Api();
+                api.setName(resultSet.getString(SQLQueryConstants.NAME));
+                api.setContext(resultSet.getString(SQLQueryConstants.CONTEXT));
+                api.setUrl(resultSet.getString(SQLQueryConstants.URL));
+                api.setHttpMethods(resultSet.getString(SQLQueryConstants.HTTP_METHODS));
+                apis.add(api);
+            }
+
+        } catch (SQLException e) {
+            String msg = "Error while getting all apis of application with application id : " + applicationId;
+            log.error(msg, e);
+            throw new IntCloudException(msg, e);
+        } finally {
+            DBUtil.closeResultSet(resultSet);
+            DBUtil.closePreparedStatement(preparedStatement);
+        }
+
+        return apis;
     }
 
     /**

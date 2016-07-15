@@ -30,6 +30,7 @@ public class Application {
     private String carbonApplicationName;
     private Blob icon;
     private List<Version> versions;
+    private List<Api> apiList;
     private String paramConfiguration;
     private String taskConfiguration;
 
@@ -117,4 +118,13 @@ public class Application {
     public void setTaskConfiguration(String taskConfiguration) {
         this.taskConfiguration = taskConfiguration;
     }
+
+    public List<Api> getApiList() {
+        return apiList;
+    }
+
+    public void setApiList(List<Api> apiList) {
+        this.apiList = apiList;
+    }
+
 }

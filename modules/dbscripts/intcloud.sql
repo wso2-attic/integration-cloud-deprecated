@@ -244,6 +244,47 @@ CREATE TABLE IF NOT EXISTS AC_SUBSCRIPTION_PLANS (
     PRIMARY KEY (PLAN_ID))
 ENGINE = InnoDB;
 
+-- -----------------------------------------------------
+-- Table `dbIntCloud`.`AC_API`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `dbIntCloud`.`AC_API` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(40) NULL DEFAULT NULL,
+  `context` VARCHAR(24) NULL DEFAULT NULL,
+  `http_methods` VARCHAR(24) NULL DEFAULT NULL,
+  `application_id` INT(11) NOT NULL,
+  `url` VARCHAR(100) NULL DEFAULT NULL,
+  `tenant_id` INT(11) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_AC_API_AC_APPLICATION` (`application_id` ASC),
+  CONSTRAINT `fk_AC_API_AC_APPLICATION`
+    FOREIGN KEY (`application_id`)
+    REFERENCES `dbIntCloud`.`AC_APPLICATION` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+-- -----------------------------------------------------
+-- Table `dbIntCloud`.`AC_PROXY_SERVICE`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `dbIntCloud`.`AC_PROXY_SERVICE` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(13) NULL DEFAULT NULL,
+  `methods` VARCHAR(24) NULL DEFAULT NULL,
+  `application_id` INT(11) NOT NULL,
+  `url` INT(11) NULL DEFAULT NULL,
+  `status` VARCHAR(45) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_AC_PROXY_AC_APPLICATION` (`application_id` ASC),
+  CONSTRAINT `fk_AC_PROXY_AC_APPLICATION`
+    FOREIGN KEY (`application_id`)
+    REFERENCES `dbIntCloud`.`AC_APPLICATION` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
 
 INSERT INTO `AC_APP_TYPE` (`id`, `name`, `description`) VALUES
 (1, 'car', 'Allows you to create ESB configuration projects');

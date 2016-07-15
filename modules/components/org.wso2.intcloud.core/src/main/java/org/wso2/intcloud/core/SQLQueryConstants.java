@@ -55,6 +55,9 @@ public class SQLQueryConstants {
     public static final String MAX_APP_COUNT = "max_app_count";
     public static final String CON_SPEC_CPU = "con_spec_cpu";
     public static final String CON_SPEC_MEMORY = "con_spec_memory";
+    public static final String CONTEXT = "context";
+    public static final String HTTP_METHODS = "http_methods";
+    public static final String URL = "url";
 
 
 
@@ -71,6 +74,9 @@ public class SQLQueryConstants {
 
     public static final String ADD_VERSION =
             "INSERT INTO AC_VERSION (name, hash_id, application_id, runtime_id, tenant_id) VALUES (?, ?, ?, ?, ?)";
+
+    public static final String ADD_API =
+            "INSERT INTO AC_API (name, application_id, context, http_methods, url, tenant_id) VALUES (?, ?, ?, ?, ?, ?)";
 
     public static final String ADD_APP_CREATION_EVENT =
             "INSERT INTO AC_EVENT (name, status, version_id, timestamp, description, tenant_id) values (?, ?, (SELECT id" +
@@ -115,6 +121,9 @@ public class SQLQueryConstants {
     public static final String GET_APPLICATION_BY_HASH_ID =
             "SELECT app.*, type.name as app_type_name, icon.icon as icon FROM AC_APPLICATION app JOIN AC_APP_TYPE type " +
             "ON app.app_type_id = type.id JOIN AC_APP_ICON icon ON app.id = icon.application_id WHERE app.hash_id=?";
+
+    public static final String GET_APIS_OF_APPLICATION =
+            "SELECT * FROM AC_API WHERE application_id=?";
 
     public static final String GET_ALL_VERSIONS_OF_APPLICATION =
             "SELECT version.*, runtime.name as runtime_name, runtime.id as runtime_id FROM AC_VERSION version JOIN " +

@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.intcloud.common.IntCloudException;
 import org.wso2.intcloud.core.dao.ApplicationDAO;
+import org.wso2.intcloud.core.dto.Api;
 import org.wso2.intcloud.core.dto.Application;
 import org.wso2.intcloud.core.dto.ApplicationRuntime;
 import org.wso2.intcloud.core.dto.ApplicationType;
@@ -87,6 +88,32 @@ public class ApplicationManager {
         } catch (SQLException e) {
             String msg = "Error while committing the application version adding transaction for application id : " +
                          applicationHashId + ", version:" + version.getVersionName() + " in tenant : " + tenantId;
+            log.error(msg, e);
+            throw new IntCloudException(msg, e);
+        } finally {
+            DBUtil.closeConnection(dbConnection);
+        }
+
+    }
+
+    /**
+     * Method for adding API.
+     *
+     * @param api api object
+     * @throws IntCloudException
+     */
+    public static void addAPI(String applicationHashId, Api api) throws IntCloudException {
+        ApplicationDAO applicationDAO = new ApplicationDAO();
+        Connection dbConnection = DBUtil.getDBConnection();
+        int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+
+        try {
+            int applicationId = applicationDAO.getApplicationId(dbConnection, applicationHashId);
+            applicationDAO.addAPI(dbConnection, applicationId, api, tenantId);
+            dbConnection.commit();
+        } catch (SQLException e) {
+            String msg = "Error while committing the api adding transaction for application id : " +
+                         applicationHashId + ", version:" + api.getName() + " in tenant : " + tenantId;
             log.error(msg, e);
             throw new IntCloudException(msg, e);
         } finally {
